@@ -1,0 +1,46 @@
+
+SetGridsize(128, 128, 2)         // Define o tamanho do sistema: número de células. Aqui temos uma rede de 512 x 512 x 2 células
+SetCellsize(3e-9, 3e-9, 3e-9)    // Define o tamanho de cada célula. Aqui temos células de 3 x 3 x 3 nm^3 
+
+Msat  = 280e3      //Define a magnetização de todo o sistema
+Aex   = 15e-12     //Define a constante de exchange (Exchange stiffness)
+
+defRegion(0, layer(0))    //Separa a rede e duas camadas
+defRegion(1, layer(1))
+
+anisU.setRegion(0, vector(0, 0, 1))   // Orientação do eixo de anisotropia da camada 0
+Ku1.setRegion(0, 1e7)                  // Constante de anisotropia uniaxial da camada 0  
+
+anisU.setRegion(1, vector(0, 0, 1))    // Orientação do eixo de anisotropia da camada 1
+Ku1.setRegion(1, 2e4)                  // Constante de anisotropia uniaxial da camada 1
+Dind.setRegion(1, 0.8e-3)               // Constante que define a magnitude da interação de Dzyaloshinskii-Moriya interfacial
+
+ext_ScaleExchange(0, 1, 0.003)           // Ajusta a interação de troca entre as camadas 0 e 1 para 0.003 x Aex
+
+m.setRegion(0, Uniform(0, 0, 1))          // Define magnetização inicial da camada 0
+m.setRegion(1, Uniform(0, 0, 1))          // Define magnetização inicial da camada 1
+
+NoDemagSpins = 1                           // "Desliga" interações magnetostáticas. Para ligar novamente basta colocar NoDemagSpins = 0
+
+relax()         // Busca configuração magnética de menor energia. high-energy states best minimized by relax()
+
+
+Bmax  := 5.0e-1    // Campo máximo aplicado  
+Bstep :=  1.0e-3   // Passo de campo
+MinimizerStop = 1e-6
+TableAdd(B_ext)          // Adiciona o campo externo na tabela de dados
+tableAdd(m.Region(1))    // Adiciona magnetização da camada 1 na tabela de dados
+
+
+
+for B:=Bmax; B>=-Bmax; B-=Bstep{                 //Histerese
+    B_ext = vector(0, 0, B)
+    minimize()   // small changes best minimized by minimize()
+    tablesave()
+}
+
+for B:=-Bmax; B<=Bmax; B+=Bstep{              //Histerese
+    B_ext = vector(0, 0, B)
+    minimize()   // small changes best minimized by minimize()
+    tablesave()
+}
