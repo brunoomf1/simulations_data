@@ -1,2 +1,3 @@
 # simulations_data
-dados de simulações micro magnéticas
+dados gerados por simulações micromagnéticas utilizando Mumax3;
+
